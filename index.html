@@ -3,163 +3,160 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>IT PMO – Project Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>IT PMO Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ===== Design tokens: corporate blue palette + spacing scale ===== */
+/* Layout: teal flat-design project board. Slim app bar with progress, filter row, four status columns; cards carry priority, owner, due date. */
 :root {
-  --blue-900: #0b2545;
-  --blue-700: #13408a;
-  --blue-600: #1a56b8;
-  --blue-100: #e3edfb;
-  --blue-50: #f1f6fd;
-  --ink: #17233a;
-  --muted: #5a6882;
-  --line: #d3dcea;
-  --surface: #ffffff;
-  --bg: #eef2f8;
-  --red: #c62828;
-  --red-bg: #fdeaea;
-  --amber: #d98400;
-  --grey: #8a94a6;
-  --green: #1e7a46;
-  --focus: #ff9f1a;
-  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px;
-  --radius: 8px;
-  --shadow: 0 1px 2px rgba(11, 37, 69, .12), 0 2px 8px rgba(11, 37, 69, .06);
-  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --bg: #f0f5f5; --surface: #ffffff; --col: #e6eeee; --ink: #12302f; --muted: #4b6463; --line: #cfdcdc;
+  --primary: #0f766e; --primary-ink: #ffffff; --primary-soft: #d7efeb; --bar: #0b3f3c; --bar-ink: #ffffff;
+  --accent: #c2410c; --accent-soft: #fdeadd;
+  --crit: #b91c1c; --crit-bg: #fde8e8; --high: #b45309; --high-bg: #fef0d4; --med: #0f766e; --med-bg: #d7efeb; --low: #475569; --low-bg: #e8edf2;
+  --focus: #c2410c; --shadow: 0 1px 2px rgba(11,63,60,.10);
+  --display: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --radius: 10px;
 }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b1717; --surface: #132424; --col: #0f1d1d; --ink: #e4f1ef; --muted: #9bb5b2; --line: #28403f;
+  --primary: #2dd4bf; --primary-ink: #04201d; --primary-soft: #14403c; --bar: #0f2625; --bar-ink: #e4f1ef;
+  --accent: #fb923c; --accent-soft: #3b2412;
+  --crit: #fca5a5; --crit-bg: #3b1818; --high: #fcd34d; --high-bg: #3a2c0c; --med: #5eead4; --med-bg: #123a36; --low: #b6c3d1; --low-bg: #222f3b;
+  --focus: #fb923c; --shadow: none; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0b1717; --surface: #132424; --col: #0f1d1d; --ink: #e4f1ef; --muted: #9bb5b2; --line: #28403f;
+  --primary: #2dd4bf; --primary-ink: #04201d; --primary-soft: #14403c; --bar: #0f2625; --bar-ink: #e4f1ef;
+  --accent: #fb923c; --accent-soft: #3b2412;
+  --crit: #fca5a5; --crit-bg: #3b1818; --high: #fcd34d; --high-bg: #3a2c0c; --med: #5eead4; --med-bg: #123a36; --low: #b6c3d1; --low-bg: #222f3b;
+  --focus: #fb923c; --shadow: none; color-scheme: dark; }
 
-/* ===== Base ===== */
 * { box-sizing: border-box; }
-body { margin: 0; font-family: var(--font); color: var(--ink); background: var(--bg); line-height: 1.4; }
+body { margin: 0; font-family: var(--display); color: var(--ink); background: var(--bg); line-height: 1.5; font-size: 15px; }
 button, input, select, textarea { font: inherit; color: inherit; }
+button, select, [draggable] { cursor: pointer; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 
-/* ===== Header + summary strip ===== */
-.app-header { background: var(--blue-900); color: #fff; padding: var(--s4) var(--s5); display: flex; flex-wrap: wrap; gap: var(--s4); align-items: center; justify-content: space-between; }
-.wordmark { font-size: 1.4rem; font-weight: 800; letter-spacing: .06em; margin: 0; }
-.wordmark span { font-weight: 400; opacity: .8; letter-spacing: 0; font-size: .95rem; margin-left: var(--s2); }
-.summary { display: flex; flex-wrap: wrap; gap: var(--s2); list-style: none; margin: 0; padding: 0; }
-.summary li { background: rgba(255,255,255,.12); border-radius: var(--radius); padding: var(--s1) var(--s3); font-size: .85rem; }
-.summary strong { font-size: 1.1rem; margin-right: var(--s1); }
-.summary .is-overdue { background: var(--red); }
-.btn { border: 1px solid transparent; border-radius: var(--radius); padding: var(--s2) var(--s4); cursor: pointer; font-weight: 600; }
-.btn-primary { background: var(--blue-600); color: #fff; }
-.btn-primary:hover { background: var(--blue-700); }
+/* App bar */
+.app-header { background: var(--bar); color: var(--bar-ink); padding-block: var(--s4); }
+.bar-row { display: flex; flex-wrap: wrap; gap: var(--s4); align-items: center; justify-content: space-between; }
+.wordmark { font-size: 1.35rem; font-weight: 800; margin: 0; letter-spacing: -.01em; }
+.wordmark span { font-weight: 500; opacity: .75; font-size: .9rem; margin-left: var(--s2); }
+.btn { display: inline-flex; align-items: center; gap: var(--s2); justify-content: center; min-height: 44px; border: 1px solid transparent; border-radius: var(--radius); padding: 0 var(--s4); font-weight: 700; transition: background-color .15s, border-color .15s, color .15s; }
+.btn-primary { background: var(--primary); color: var(--primary-ink); }
+.btn-primary:hover { filter: brightness(1.1); }
 .btn-primary:disabled { opacity: .65; cursor: progress; }
 .btn-ghost { background: transparent; border-color: var(--line); color: var(--ink); }
-.app-header .btn-primary { background: #fff; color: var(--blue-900); }
-.app-header .btn-primary:hover { background: var(--blue-100); }
+.btn-ghost:hover { background: var(--primary-soft); }
+.progress { display: flex; align-items: center; gap: var(--s3); margin-top: var(--s4); font-size: .85rem; }
+.progress-track { flex: 1; height: 8px; border-radius: 99px; background: rgba(255,255,255,.18); overflow: hidden; }
+.progress-fill { height: 100%; width: 0; background: var(--primary); border-radius: 99px; transition: width .3s ease; }
+#progressText { font-weight: 700; min-width: 7.5em; text-align: right; font-variant-numeric: tabular-nums; }
+.summary { display: flex; flex-wrap: wrap; gap: var(--s2); list-style: none; margin: var(--s4) 0 0; padding: 0; }
+.summary li { display: flex; align-items: baseline; gap: var(--s2); background: rgba(255,255,255,.1); border-radius: var(--radius); padding: var(--s1) var(--s3); font-size: .82rem; }
+.summary strong { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.summary .is-overdue { background: var(--crit); color: #fff; }
 
-/* ===== Filter bar ===== */
-.filters { display: flex; flex-wrap: wrap; gap: var(--s3); align-items: end; padding: var(--s3) var(--s5); background: var(--surface); border-bottom: 1px solid var(--line); }
-.filters label { display: block; font-size: .75rem; font-weight: 600; color: var(--muted); margin-bottom: var(--s1); }
-.filters select, .filters input { border: 1px solid var(--line); border-radius: 6px; padding: 6px var(--s2); min-width: 160px; background: #fff; }
-.note { margin-left: auto; font-size: .78rem; color: var(--muted); }
+/* Filters */
+.filters { background: var(--surface); border-bottom: 1px solid var(--line); padding-block: var(--s3); display: flex; flex-wrap: wrap; gap: var(--s3); align-items: end; }
+.filters label { display: block; font-size: .75rem; font-weight: 700; color: var(--muted); margin-bottom: var(--s1); letter-spacing: .04em; text-transform: uppercase; }
+.filters select, .filters input, .field input, .field select, .field textarea { min-height: 44px; border: 1px solid var(--line); border-radius: 8px; padding: 0 var(--s3); background: var(--surface); }
+.filters select, .filters input { min-width: 170px; }
+.field textarea { padding: var(--s3); }
+.note { margin: 0 0 0 auto; font-size: .78rem; color: var(--muted); max-width: 30ch; }
 
-/* ===== Board ===== */
-.board { display: flex; gap: var(--s4); padding: var(--s5); align-items: flex-start; }
-.column { flex: 1 1 0; min-width: 0; background: var(--blue-50); border: 2px solid transparent; border-radius: var(--radius); padding: var(--s3); min-height: 240px; transition: background .12s, border-color .12s; }
-.column.drop-target { background: var(--blue-100); border-color: var(--blue-600); border-style: dashed; }
+/* Board */
+.board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s4); padding-block: var(--s5); align-items: start; }
+.column { background: var(--col); border: 2px solid transparent; border-radius: var(--radius); padding: var(--s3); min-height: 240px; transition: background-color .15s, border-color .15s; }
+.column.drop-target { background: var(--primary-soft); border-color: var(--primary); border-style: dashed; }
 .column-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--s3); }
-.column-head h2 { margin: 0; font-size: 1rem; color: var(--blue-900); }
-.count { background: var(--blue-700); color: #fff; border-radius: 999px; padding: 1px 10px; font-size: .8rem; font-weight: 700; }
-.empty { color: var(--muted); font-size: .85rem; text-align: center; padding: var(--s4) 0; }
+.column-head h2 { display: flex; align-items: center; gap: var(--s2); margin: 0; font-size: .95rem; font-weight: 800; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+.dot-in-progress { background: var(--primary); } .dot-blocked { background: var(--accent); } .dot-done { background: var(--low); }
+.count { background: var(--surface); border: 1px solid var(--line); border-radius: 99px; padding: 0 10px; font-size: .8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.empty { color: var(--muted); font-size: .85rem; text-align: center; padding: var(--s5) var(--s3); margin: 0; border: 1px dashed var(--line); border-radius: 8px; }
 .cards { display: flex; flex-direction: column; gap: var(--s3); }
 
-/* ===== Cards ===== */
-.card { position: relative; background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: var(--s3) var(--s3) var(--s3) var(--s4); border-left: 6px solid var(--grey); cursor: grab; }
-.card.dragging { opacity: .45; }
-.card.p-critical { border-left-color: var(--red); }
-.card.p-high { border-left-color: var(--amber); }
-.card.p-medium { border-left-color: var(--blue-600); }
-.card.p-low { border-left-color: var(--grey); }
-.card-top { display: flex; justify-content: space-between; gap: var(--s2); align-items: start; }
-.task-id { font-size: .72rem; font-weight: 700; color: var(--muted); letter-spacing: .03em; }
-.card h3 { margin: var(--s1) 0; font-size: .95rem; overflow-wrap: anywhere; }
-.meta { font-size: .78rem; color: var(--muted); margin: 2px 0; overflow-wrap: anywhere; }
+/* Cards */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: var(--s3) var(--s4); transition: border-color .15s, transform .15s; }
+.card:hover { border-color: var(--primary); }
+.card.dragging { opacity: .4; }
+.card-top { display: flex; justify-content: space-between; gap: var(--s2); align-items: center; }
+.task-id { font-size: .72rem; font-weight: 700; color: var(--muted); letter-spacing: .04em; }
+.card h3 { margin: var(--s2) 0 var(--s1); font-size: .95rem; line-height: 1.35; overflow-wrap: anywhere; }
+.meta { font-size: .78rem; color: var(--muted); margin: 0; overflow-wrap: anywhere; }
 .badges { display: flex; flex-wrap: wrap; gap: var(--s1); margin: var(--s2) 0; }
-.pill, .tag, .badge-overdue { font-size: .7rem; font-weight: 700; border-radius: 999px; padding: 2px 8px; border: 1px solid transparent; }
-.pill-critical { background: var(--red-bg); color: var(--red); border-color: var(--red); }
-.pill-high { background: #fff3dc; color: #8a5300; border-color: var(--amber); }
-.pill-medium { background: var(--blue-100); color: var(--blue-700); border-color: var(--blue-600); }
-.pill-low { background: #eceff3; color: #4a5568; border-color: var(--grey); }
-.tag { background: #fff; color: var(--blue-700); border-color: var(--line); font-weight: 600; }
-.badge-overdue { background: var(--red-bg); color: var(--red); border-color: #efb3b3; }
-.card-actions { display: flex; justify-content: space-between; align-items: center; gap: var(--s2); margin-top: var(--s2); }
-.card-actions select { border: 1px solid var(--line); border-radius: 6px; padding: 3px var(--s2); font-size: .78rem; background: #fff; max-width: 60%; }
-.icon-btn { background: transparent; border: 1px solid transparent; border-radius: 6px; width: 28px; height: 28px; cursor: pointer; color: var(--muted); font-size: 1.1rem; line-height: 1; }
-.icon-btn:hover { color: var(--red); background: var(--red-bg); }
-.confirm { display: flex; align-items: center; gap: var(--s1); font-size: .78rem; font-weight: 600; color: var(--red); }
-.confirm button { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 2px 8px; cursor: pointer; font-size: .78rem; }
-.confirm .yes { background: var(--red); color: #fff; border-color: var(--red); }
+.pill, .tag, .badge-overdue { font-size: .7rem; font-weight: 700; border-radius: 99px; padding: 2px 10px; }
+.pill-critical { background: var(--crit-bg); color: var(--crit); } .pill-high { background: var(--high-bg); color: var(--high); }
+.pill-medium { background: var(--med-bg); color: var(--med); } .pill-low { background: var(--low-bg); color: var(--low); }
+.tag { background: transparent; color: var(--muted); border: 1px solid var(--line); font-weight: 600; }
+.badge-overdue { background: var(--crit-bg); color: var(--crit); }
+.card-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); font-size: .78rem; color: var(--muted); }
+.avatar { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); font-size: .65rem; font-weight: 800; }
+.who { min-width: 0; overflow-wrap: anywhere; }
+.due { margin-left: auto; display: inline-flex; align-items: center; gap: var(--s1); }
+.due.late { color: var(--crit); font-weight: 700; }
+.card-actions { display: flex; justify-content: space-between; align-items: center; gap: var(--s2); margin-top: var(--s3); padding-top: var(--s2); border-top: 1px solid var(--line); }
+.card-actions select { min-height: 44px; border: 1px solid var(--line); border-radius: 8px; padding: 0 var(--s2); font-size: .8rem; background: var(--surface); max-width: 70%; }
+.icon-btn { display: inline-grid; place-items: center; background: transparent; border: 1px solid transparent; border-radius: 8px; width: 44px; height: 44px; color: var(--muted); font-size: 1.4rem; line-height: 1; transition: background-color .15s, color .15s; }
+.icon-btn:hover { color: var(--crit); background: var(--crit-bg); }
+.confirm { display: flex; align-items: center; gap: var(--s2); font-size: .82rem; font-weight: 700; color: var(--crit); }
+.confirm button { min-height: 44px; min-width: 56px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 0 var(--s3); font-size: .82rem; font-weight: 700; }
+.confirm .yes { background: var(--crit); color: var(--surface); border-color: var(--crit); }
 
-/* ===== Modal form ===== */
-dialog { border: none; border-radius: 12px; padding: 0; width: min(560px, 94vw); box-shadow: 0 12px 40px rgba(11,37,69,.35); }
-dialog::backdrop { background: rgba(11, 37, 69, .55); }
-.modal-head { display: flex; justify-content: space-between; align-items: center; padding: var(--s4) var(--s5); background: var(--blue-900); color: #fff; }
+/* Modal */
+dialog { border: 1px solid var(--line); border-radius: 14px; padding: 0; width: min(580px, 94vw); background: var(--surface); color: var(--ink); box-shadow: 0 12px 40px rgba(0,0,0,.35); }
+dialog::backdrop { background: rgba(5, 20, 20, .6); }
+.modal-head { display: flex; justify-content: space-between; align-items: center; padding: var(--s3) var(--s3) var(--s3) var(--s5); border-bottom: 1px solid var(--line); }
 .modal-head h2 { margin: 0; font-size: 1.1rem; }
-.modal-head .icon-btn { color: #fff; }
-.modal-head .icon-btn:hover { background: rgba(255,255,255,.15); color: #fff; }
 form { padding: var(--s4) var(--s5) var(--s5); display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3) var(--s4); max-height: 80vh; overflow: auto; }
-.field { display: flex; flex-direction: column; }
+.field { display: flex; flex-direction: column; min-width: 0; }
 .field.full { grid-column: 1 / -1; }
-.field label { font-size: .8rem; font-weight: 600; margin-bottom: var(--s1); }
-.field input, .field select, .field textarea { border: 1px solid var(--line); border-radius: 6px; padding: var(--s2); background: #fff; }
-.field textarea { min-height: 80px; resize: vertical; }
-.field .error { color: var(--red); font-size: .76rem; min-height: 1em; margin-top: 2px; }
-.field [aria-invalid="true"] { border-color: var(--red); background: var(--red-bg); }
+.field label { font-size: .8rem; font-weight: 700; margin-bottom: var(--s1); }
+.field textarea { min-height: 88px; resize: vertical; }
+.field .error { color: var(--crit); font-size: .78rem; min-height: 1.2em; margin-top: 2px; }
+.field [aria-invalid="true"] { border-color: var(--crit); background: var(--crit-bg); }
 .form-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: var(--s2); }
 
-/* ===== Toasts ===== */
-.toasts { position: fixed; right: var(--s4); bottom: var(--s4); display: flex; flex-direction: column; gap: var(--s2); z-index: 50; max-width: min(380px, 92vw); }
-.toast { background: var(--blue-900); color: #fff; padding: var(--s3) var(--s4); border-radius: var(--radius); box-shadow: var(--shadow); font-size: .88rem; border-left: 5px solid var(--green); }
-.toast.warn { border-left-color: var(--amber); }
+/* Toasts */
+.toasts { position: fixed; right: max(var(--s4), env(safe-area-inset-right, 0px)); bottom: max(var(--s4), env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: var(--s2); z-index: 50; max-width: min(380px, 92vw); }
+.toast { background: var(--bar); color: var(--bar-ink); padding: var(--s3) var(--s4); border-radius: var(--radius); font-size: .88rem; border-left: 4px solid var(--primary); box-shadow: 0 4px 16px rgba(0,0,0,.25); }
+.toast.warn { border-left-color: var(--accent); }
 
-/* ===== Responsive: stack columns under 768px ===== */
-@media (max-width: 767px) {
-  .board { flex-direction: column; padding: var(--s3); }
-  .column { width: 100%; flex: none; min-height: 0; }
-  .filters { padding: var(--s3); }
-  .filters > div { flex: 1 1 140px; }
-  .filters select, .filters input { width: 100%; }
-  .note { margin-left: 0; }
+@media (max-width: 1100px) { .board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) {
+  .board { grid-template-columns: 1fr; }
+  .column { min-height: 0; }
+  .filters > div { flex: 1 1 140px; } .filters select, .filters input { width: 100%; min-width: 0; }
+  .note { margin-left: 0; max-width: none; }
   form { grid-template-columns: 1fr; }
-  .app-header { padding: var(--s3); }
+  #progressText { min-width: 0; }
 }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
 <body>
 
-<!-- ===== Header: wordmark, live summary strip, add button ===== -->
-<header class="app-header">
-  <h1 class="wordmark">IT PMO<span>Project Board (demo)</span></h1>
+<header class="app-header"><div class="wrap">
+  <div class="bar-row">
+    <h1 class="wordmark">IT PMO<span>Project Board (demo)</span></h1>
+    <button type="button" class="btn btn-primary" id="openForm"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add task</button>
+  </div>
+  <div class="progress"><div class="progress-track" id="progressBar" role="progressbar" aria-label="Tasks done" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-fill" id="progressFill"></div></div><span id="progressText">0% complete</span></div>
   <ul class="summary" id="summary" aria-label="Board summary"></ul>
-  <button type="button" class="btn btn-primary" id="openForm">+ Add Task</button>
-</header>
+</div></header>
 
-<!-- ===== Filter bar ===== -->
-<section class="filters" aria-label="Filters">
-  <div>
-    <label for="fProject">Project</label>
-    <select id="fProject"><option value="">All projects</option></select>
-  </div>
-  <div>
-    <label for="fAssignee">Assignee contains</label>
-    <input id="fAssignee" type="text" placeholder="e.g. Tan">
-  </div>
-  <div>
-    <label for="fPriority">Priority</label>
-    <select id="fPriority"><option value="">All priorities</option></select>
-  </div>
+<section class="filters wrap" aria-label="Filters">
+  <div><label for="fProject">Project</label><select id="fProject"><option value="">All projects</option></select></div>
+  <div><label for="fAssignee">Assignee</label><input id="fAssignee" type="text" placeholder="e.g. Tan"></div>
+  <div><label for="fPriority">Priority</label><select id="fPriority"><option value="">All priorities</option></select></div>
   <button type="button" class="btn btn-ghost" id="clearFilters">Clear</button>
-  <p class="note">Demo data lives in memory only — refreshing the page resets the board.</p>
+  <p class="note">Demo data lives in memory only. Refreshing resets the board.</p>
 </section>
 
-<!-- ===== Kanban board (columns rendered by renderBoard) ===== -->
-<main class="board" id="board" aria-label="Kanban board"></main>
-
+<main class="board wrap" id="board" aria-label="Kanban board"></main>
 <!-- ===== Add Task modal ===== -->
 <dialog id="taskDialog" aria-labelledby="dlgTitle">
   <div class="modal-head">
@@ -230,6 +227,7 @@ form { padding: var(--s4) var(--s5) var(--s5); display: grid; grid-template-colu
    CONFIG — change the email address here (the ONLY place it appears).
    ===================================================================== */
 const FORMSUBMIT_ENDPOINT = "https://formsubmit.co/ajax/YOUR_EMAIL@example.com";
+const NOTIFY_ENABLED = FORMSUBMIT_ENDPOINT.indexOf("YOUR_EMAIL") === -1;
 
 /* ===== Reference data ===== */
 const STATUSES = ["Backlog", "In Progress", "Blocked", "Done"];
@@ -247,6 +245,9 @@ const state = {
   focusAfterRender: null // selector to refocus after a re-render
 };
 
+const ICON_CAL = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
+const ICON_TRASH = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>';
+
 /* ===== Helpers ===== */
 function escapeHtml(value) {
   return String(value == null ? "" : value)
@@ -263,7 +264,7 @@ function formatDate(iso) {
 }
 function isOverdue(task) { return task.status !== "Done" && task.dueDate < isoToday(); }
 function slug(s) { return s.toLowerCase(); }
-function formatId(n) { return "UOB-ITPM-" + String(n).padStart(4, "0"); }
+function formatId(n) { return "PMO-" + String(n).padStart(4, "0"); }
 
 /* ===== Seed data (dates relative to today so overdue demo always works) ===== */
 function seedTasks() {
@@ -300,12 +301,21 @@ function applyFilters(tasks) {
 function renderSummary() {
   const total = state.tasks.length;
   const overdue = state.tasks.filter(isOverdue).length;
-  let html = '<li><strong>' + total + '</strong>Total</li>';
+  const done = state.tasks.filter(function (t) { return t.status === "Done"; }).length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  let html = '<li><strong>' + total + '</strong><span>Total</span></li>';
   STATUSES.forEach(function (s) {
-    html += '<li><strong>' + state.tasks.filter(function (t) { return t.status === s; }).length + '</strong>' + escapeHtml(s) + '</li>';
+    html += '<li><strong>' + state.tasks.filter(function (t) { return t.status === s; }).length + '</strong><span>' + escapeHtml(s) + '</span></li>';
   });
-  html += '<li class="is-overdue"><strong>' + overdue + '</strong>Overdue</li>';
+  html += '<li class="' + (overdue ? 'is-overdue' : '') + '"><strong>' + overdue + '</strong><span>Overdue</span></li>';
   document.getElementById("summary").innerHTML = html;
+  document.getElementById("progressFill").style.width = pct + "%";
+  document.getElementById("progressText").textContent = pct + "% complete";
+  document.getElementById("progressBar").setAttribute("aria-valuenow", pct);
+}
+
+function initials(name) {
+  return name.trim().split(/\s+/).slice(0, 2).map(function (p) { return p.charAt(0).toUpperCase(); }).join("");
 }
 
 function renderCard(task) {
@@ -318,17 +328,19 @@ function renderCard(task) {
         '<button type="button" class="yes" data-action="delete-yes" data-id="' + escapeHtml(task.id) + '">Yes</button>' +
         '<button type="button" data-action="delete-no" data-id="' + escapeHtml(task.id) + '">No</button></div>'
     : '<select data-action="move" data-id="' + escapeHtml(task.id) + '" aria-label="Move ' + escapeHtml(task.id) + ' to another column">' + moveOptions + '</select>' +
-      '<button type="button" class="icon-btn" data-action="delete-ask" data-id="' + escapeHtml(task.id) + '" aria-label="Delete task ' + escapeHtml(task.id) + '">×</button>';
+      '<button type="button" class="icon-btn" data-action="delete-ask" data-id="' + escapeHtml(task.id) + '" aria-label="Delete task ' + escapeHtml(task.id) + '">' + ICON_TRASH + '</button>';
   return '<article class="card p-' + slug(task.priority) + '" draggable="true" data-id="' + escapeHtml(task.id) + '">' +
-    '<div class="card-top"><span class="task-id">' + escapeHtml(task.id) + '</span></div>' +
+    '<div class="card-top"><span class="task-id">' + escapeHtml(task.id) + '</span>' +
+      '<span class="pill pill-' + slug(task.priority) + '">' + escapeHtml(task.priority) + '</span></div>' +
     '<h3>' + escapeHtml(task.title) + '</h3>' +
     '<p class="meta">' + escapeHtml(task.project) + '</p>' +
-    '<p class="meta">👤 ' + escapeHtml(task.assignee) + ' · 📅 Due ' + escapeHtml(formatDate(task.dueDate)) + '</p>' +
     '<div class="badges">' +
-      '<span class="pill pill-' + slug(task.priority) + '">' + escapeHtml(task.priority) + '</span>' +
       '<span class="tag">' + escapeHtml(task.category) + '</span>' +
       (isOverdue(task) ? '<span class="badge-overdue">Overdue</span>' : '') +
     '</div>' +
+    '<div class="card-foot"><span class="avatar" aria-hidden="true">' + escapeHtml(initials(task.assignee)) + '</span>' +
+      '<span class="who">' + escapeHtml(task.assignee) + '</span>' +
+      '<span class="due' + (isOverdue(task) ? ' late' : '') + '">' + ICON_CAL + 'Due ' + escapeHtml(formatDate(task.dueDate)) + '</span></div>' +
     '<div class="card-actions">' + actions + '</div>' +
   '</article>';
 }
@@ -339,9 +351,9 @@ function renderBoard() {
   board.innerHTML = STATUSES.map(function (status) {
     const items = visible.filter(function (t) { return t.status === status; });
     return '<section class="column" data-status="' + escapeHtml(status) + '" aria-label="' + escapeHtml(status) + ' column">' +
-      '<div class="column-head"><h2>' + escapeHtml(status) + '</h2>' +
+      '<div class="column-head"><h2><span class="dot dot-' + slug(status).replace(/\s+/g, '-') + '" aria-hidden="true"></span>' + escapeHtml(status) + '</h2>' +
       '<span class="count" aria-label="' + items.length + ' tasks">' + items.length + '</span></div>' +
-      '<div class="cards">' + (items.length ? items.map(renderCard).join("") : '<p class="empty">No tasks</p>') + '</div>' +
+      '<div class="cards">' + (items.length ? items.map(renderCard).join("") : '<p class="empty">Nothing here. Drag a card in or use Move.</p>') + '</div>' +
     '</section>';
   }).join("");
   renderSummary();
@@ -391,7 +403,7 @@ async function notifyNewTask(task) {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({
-      _subject: `[UOB IT PMO] New task ${task.id}: ${task.title}`,
+      _subject: `[IT PMO] New task ${task.id}: ${task.title}`,
       _template: "table",
       _captcha: "false",
       "Task ID": task.id,
@@ -474,7 +486,7 @@ async function handleSubmit(event) {
   const task = addTask(data); // optimistic: card appears immediately
   showToast("Task " + task.id + " added to the board");
   try {
-    await notifyNewTask(task);
+    if (NOTIFY_ENABLED) await notifyNewTask(task);
   } catch (err) {
     showToast("Card added locally — email notification failed", "warn");
   } finally {
@@ -569,3 +581,4 @@ wireEvents();
 renderBoard();
 </script>
 </body>
+</html>
