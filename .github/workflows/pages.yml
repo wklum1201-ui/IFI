@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Stage site
-        run: mkdir _site && cp index.html _site/
+        run: mkdir -p _site/hooks && cp .claude/hooks/*.js _site/hooks/ && sed 's#\.claude/hooks/#hooks/#g' index.html > _site/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
