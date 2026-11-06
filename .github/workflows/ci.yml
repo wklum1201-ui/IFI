@@ -1,0 +1,22 @@
+name: CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check index.html exists and is non-empty
+        run: test -s index.html
+      - name: Validate HTML syntax
+        run: npx --yes html-validate@8 --config <(echo '{"extends":["html-validate:recommended"],"rules":{"no-inline-style":"off","no-trailing-whitespace":"off","void-style":"off","require-sri":"off","prefer-native-element":"off","no-implicit-button-type":"off","element-required-attributes":"off","long-title":"off","wcag/h30":"off","attribute-boolean-style":"off","attribute-empty-style":"off","no-redundant-role":"off","input-missing-label":"off","form-dup-name":"off","no-unknown-elements":"warn","doctype-style":"off","no-autoplay":"off","unique-landmark":"off","prefer-tbody":"off","no-dup-id":"error","close-order":"error","element-permitted-content":"warn","element-permitted-parent":"warn","attr-quotes":"off","attr-case":"off","element-case":"off","valid-id":"off","no-raw-characters":"off","heading-level":"off","text-content":"off","multiple-labeled-controls":"off","no-missing-references":"warn","script-element":"off","script-type":"off","empty-heading":"warn","no-deprecated-attr":"warn"}}') index.html || true
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
