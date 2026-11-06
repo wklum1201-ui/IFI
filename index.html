@@ -21,6 +21,7 @@
   --m-card: linear-gradient(180deg,#ffffff 0%,#f0f2f4 100%);
   --m-col: linear-gradient(180deg,#dfe3e7 0%,#cfd4da 100%);
   --m-shine: inset 0 1px 0 rgba(255,255,255,.75);
+  --r1: #14171a; --r2: #4a525b; --r3: #8b939c; --r4: #c3c8ce; --bar-mark: linear-gradient(180deg,#59616a,#2a3036);
   --display: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --radius: 10px;
 }
@@ -35,6 +36,8 @@
   --m-card: linear-gradient(180deg,#22272c 0%,#181b1f 100%);
   --m-col: linear-gradient(180deg,#14171a 0%,#0f1113 100%);
   --m-shine: inset 0 1px 0 rgba(255,255,255,.08);
+  --r1: #f1f3f5; --r2: #c3c9d0; --r3: #8b939c; --r4: #4f565e; --bar-mark: linear-gradient(180deg,#eef1f4,#9aa2ab);
+  --r1: #f1f3f5; --r2: #c3c9d0; --r3: #8b939c; --r4: #4f565e; --bar-mark: linear-gradient(180deg,#eef1f4,#9aa2ab);
   color-scheme: dark;
 } }
 :root[data-theme="dark"] {
@@ -85,6 +88,25 @@ button, select, [draggable] { cursor: pointer; }
 .filters select, .filters input { min-width: 170px; }
 .field textarea { padding: var(--s3); }
 .note { margin: 0 0 0 auto; font-size: .78rem; color: var(--muted); max-width: 30ch; }
+
+/* Charts */
+.charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); padding-top: var(--s5); }
+.chart { background: var(--m-card); box-shadow: var(--m-shine), var(--shadow); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--s4); min-width: 0; }
+.chart h2 { margin: 0 0 var(--s1); font-size: .95rem; font-weight: 800; }
+.chart .sub { margin: 0 0 var(--s3); font-size: .78rem; color: var(--muted); }
+.bars { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) 2.2rem; gap: var(--s2) var(--s3); align-items: center; margin: 0; padding: 0; list-style: none; }
+.bars li { display: contents; }
+.bar-label { font-size: .8rem; overflow-wrap: anywhere; }
+.bar-track { height: 18px; display: flex; gap: 2px; border-bottom: 1px solid var(--line); }
+.bar-seg { height: 100%; min-width: 0; border-radius: 0 4px 4px 0; }
+.bar-seg:first-child { border-radius: 0 4px 4px 0; }
+.bar-seg.solo { background: var(--bar-mark); }
+.bar-seg:hover { outline: 2px solid var(--focus); outline-offset: 1px; }
+.bar-val { font-size: .82rem; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.legend { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4); margin: var(--s3) 0 0; padding: 0; list-style: none; font-size: .78rem; color: var(--muted); }
+.legend li { display: flex; align-items: center; gap: var(--s2); }
+.swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--line); }
+.chart-empty { font-size: .85rem; color: var(--muted); margin: 0; }
 
 /* Board */
 .board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s4); padding-block: var(--s5); align-items: start; }
@@ -144,9 +166,10 @@ form { padding: var(--s4) var(--s5) var(--s5); display: grid; grid-template-colu
 .toast { background: var(--m-bar); color: var(--bar-ink); padding: var(--s3) var(--s4); border-radius: var(--radius); font-size: .88rem; border-left: 4px solid var(--primary); box-shadow: 0 4px 16px rgba(0,0,0,.25); }
 .toast.warn { border-left-color: var(--crit); }
 
-@media (max-width: 1100px) { .board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 1100px) { .charts { grid-template-columns: 1fr; } .board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) {
   .board { grid-template-columns: 1fr; }
+  .bars { grid-template-columns: minmax(0, 7rem) minmax(0, 1fr) 2rem; }
   .column { min-height: 0; }
   .filters > div { flex: 1 1 140px; } .filters select, .filters input { width: 100%; min-width: 0; }
   .note { margin-left: 0; max-width: none; }
@@ -173,6 +196,12 @@ form { padding: var(--s4) var(--s5) var(--s5); display: grid; grid-template-colu
   <div><label for="fPriority">Priority</label><select id="fPriority"><option value="">All priorities</option></select></div>
   <button type="button" class="btn btn-ghost" id="clearFilters">Clear</button>
   <p class="note">Demo data lives in memory only. Refreshing resets the board.</p>
+</section>
+
+<section class="charts wrap" aria-label="Charts">
+  <figure class="chart" style="margin-inline:0"><h2>Tasks by status</h2><p class="sub" id="statusSub"></p><ul class="bars" id="statusBars"></ul></figure>
+  <figure class="chart" style="margin-inline:0"><h2>Workload by project</h2><p class="sub">Tasks per project, split by priority</p><ul class="bars" id="projectBars"></ul>
+    <ul class="legend" aria-label="Priority legend"><li><span class="swatch" style="background:var(--r1)"></span>Critical</li><li><span class="swatch" style="background:var(--r2)"></span>High</li><li><span class="swatch" style="background:var(--r3)"></span>Medium</li><li><span class="swatch" style="background:var(--r4)"></span>Low</li></ul></figure>
 </section>
 
 <main class="board wrap" id="board" aria-label="Kanban board"></main>
@@ -364,6 +393,25 @@ function renderCard(task) {
   '</article>';
 }
 
+const RAMP = { Critical: "var(--r1)", High: "var(--r2)", Medium: "var(--r3)", Low: "var(--r4)" };
+function renderCharts(visible) {
+  const max = Math.max(1, ...STATUSES.map(function (s) { return visible.filter(function (t) { return t.status === s; }).length; }));
+  document.getElementById("statusSub").textContent = visible.length + " task" + (visible.length === 1 ? "" : "s") + (visible.length === state.tasks.length ? " on the board" : " match the filters");
+  document.getElementById("statusBars").innerHTML = STATUSES.map(function (s) {
+    const n = visible.filter(function (t) { return t.status === s; }).length;
+    return '<li><span class="bar-label">' + escapeHtml(s) + '</span><span class="bar-track"><span class="bar-seg solo" style="width:' + (n / max * 100) + '%" title="' + escapeHtml(s) + ': ' + n + '"></span></span><span class="bar-val">' + n + '</span></li>';
+  }).join("");
+  const rows = PROJECTS.map(function (p) { return { p: p, items: visible.filter(function (t) { return t.project === p; }) }; }).filter(function (r) { return r.items.length; });
+  const pmax = Math.max(1, ...rows.map(function (r) { return r.items.length; }));
+  document.getElementById("projectBars").innerHTML = rows.length ? rows.map(function (r) {
+    const segs = PRIORITIES.map(function (pr) {
+      const n = r.items.filter(function (t) { return t.priority === pr; }).length;
+      return n ? '<span class="bar-seg" style="width:' + (n / pmax * 100) + '%;background:' + RAMP[pr] + '" title="' + escapeHtml(r.p) + ' · ' + pr + ': ' + n + '"></span>' : "";
+    }).join("");
+    return '<li><span class="bar-label">' + escapeHtml(r.p) + '</span><span class="bar-track">' + segs + '</span><span class="bar-val">' + r.items.length + '</span></li>';
+  }).join("") : '<li><p class="chart-empty">No tasks match the filters.</p></li>';
+}
+
 function renderBoard() {
   const visible = applyFilters(state.tasks);
   const board = document.getElementById("board");
@@ -376,6 +424,7 @@ function renderBoard() {
     '</section>';
   }).join("");
   renderSummary();
+  renderCharts(visible);
   if (state.focusAfterRender) {
     const el = board.querySelector(state.focusAfterRender);
     if (el) el.focus();
